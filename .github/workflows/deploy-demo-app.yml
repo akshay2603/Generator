@@ -1,0 +1,22 @@
+name: deploy-demo-app
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: login to ECR
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry: 838596736137.dkr.ecr.us-east-1.amazonaws.com/app
+      - name: build and push image
+        run: |
+          docker build -t demo-app .
+          docker tag demo-app 838596736137.dkr.ecr.us-east-1.amazonaws.com/app
+          docker push 838596736137.dkr.ecr.us-east-1.amazonaws.com/app
