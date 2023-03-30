@@ -11,12 +11,17 @@ jobs:
     steps:
       - name: checkout repo
         uses: actions/checkout@v2
-      - name: login to ECR
-        uses: aws-actions/amazon-ecr-login@v1
+      - name: configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          registry: 838596736137.dkr.ecr.us-east-1.amazonaws.com/app
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
       - name: build and push image
         run: |
           docker build -t demo-app .
-          docker tag demo-app 838596736137.dkr.ecr.us-east-1.amazonaws.com/app
-          docker push 838596736137.dkr.ecr.us-east-1.amazonaws.com/app
+          docker tag demo-app 838596736137.dkr.ecr.us-east-1.amazonaws.com/app/demo-app:latest
+          docker push 838596736137.dkr.ecr.us-east-1.amazonaws.com/app/demo-app:latest
