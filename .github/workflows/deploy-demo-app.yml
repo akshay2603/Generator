@@ -1,26 +1,50 @@
-name: deploy-demo-app
+name: Build and Deploy to ECR
 
 on:
   push:
     branches:
       - main
 
+env:
+  AWS_REGION: us-east-1
+  ECR_REPO_NAME: app
+  DOCKER_IMAGE_NAME: demo-app
+
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: checkout repo
+      - name: Checkout code
         uses: actions/checkout@v2
-      - name: configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+
+      - name: Login to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-      - name: login to ECR
-        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 838596736137.dkr.ecr.us-east-1.amazonaws.com
-      - name: build and push image
+          region: ${{ env.AWS_REGION }}
+
+      - name: Build and tag Docker image
+        id: build-image
         run: |
-          docker build -t demo-app --build-arg NODE_VERSION=16 .
-          docker tag demo-app:latest 838596736137.dkr.ecr.us-east-1.amazonaws.com/app/demo-app:latest
-          docker push 838596736137.dkr.ecr.us-east-1.amazonaws.com/app/demo-app:latest
+          docker build -t $DOCKER_IMAGE_NAME:v2 .
+          docker tag $DOCKER_IMAGE_NAME:v2 ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPO_NAME/$DOCKER_IMAGE_NAME:v2
+
+      - name: Push Docker image to ECR
+        id: push-image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPO_NAME/$DOCKER_IMAGE_NAME:v2
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+
+      - name: Pull Docker image from ECR
+        run: docker pull ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPO_NAME/$DOCKER_IMAGE_NAME:v2
+
+      - name: Run Docker container
+        run: docker run -p 80:3000 ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPO_NAME/$DOCKER_IMAGE_NAME:v2
