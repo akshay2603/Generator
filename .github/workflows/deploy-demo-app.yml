@@ -36,4 +36,3 @@ jobs:
 
       - name: Run Docker container
         run: docker run -p 80:3000 838596736137.dkr.ecr.us-east-1.amazonaws.com/app/demo-app:v2
-        
