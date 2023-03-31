@@ -23,17 +23,16 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build Docker image
-        run: docker build -t demo-app:v2 .
+        run: docker build -t app:latest .
 
       - name: Tag Docker image
-        run: docker tag demo-app:v2 838596736137.dkr.ecr.us-east-1.amazonaws.com/app/demo-app:v2
+        run: docker tag demo-app:v2 838596736137.dkr.ecr.us-east-1.amazonaws.com/app:latest
 
       - name: Push Docker image to Amazon ECR
-        run: docker push 838596736137.dkr.ecr.us-east-1.amazonaws.com/app/demo-app:v2
+        run: docker push 838596736137.dkr.ecr.us-east-1.amazonaws.com/app:latest
 
       - name: Pull Docker image from Amazon ECR
-        run: docker pull 838596736137.dkr.ecr.us-east-1.amazonaws.com/app/demo-app:v2
+        run: docker pull 838596736137.dkr.ecr.us-east-1.amazonaws.com/app:latest
 
       - name: Run Docker container
-        run: docker run -p 80:3000 838596736137.dkr.ecr.us-east-1.amazonaws.com/app/demo-app:v2
-        
+        run: docker run -p 80:3000 838596736137.dkr.ecr.us-east-1.amazonaws.com/app:latest
